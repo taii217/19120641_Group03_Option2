@@ -9,7 +9,7 @@ from accounts.decorators import unauthenticated_user
 from .models import *
 
 from .filters import OrderFilter
-from .forms import OrderForm, CreateUserForm
+from .forms import OrderForm, CreateUserForm, CustomerForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
@@ -95,12 +95,28 @@ def userPage(request):
             }
     return render(request,'accounts/user.html',context)
 
+
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customers'])
+def accountSettings(request):
+    user = request.user.customer
+    form = CustomerForm(instance=user)
+    if request.method =='POST':
+        form = CustomerForm(request.POST,request.FILES,instance=user)
+        if form.is_valid():
+            form.save()
+        
+    context ={'form':form}
+    return render(request,'accounts/account_settings.html',context) 
+
+
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Admin'])
 def products(request):
     products = Product.objects.all()
     context ={'products':products}
     return render(request,'accounts\products.html',context)
+
 
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Admin'])
